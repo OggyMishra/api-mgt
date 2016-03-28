@@ -10,12 +10,13 @@
     "management"
   ],
   "website": "https://getkong.org/",
-  "repository": "https://github.com/heroku/heroku-kong.git",
+  "repository": "https://github.com/chrisanderton/heroku-kong-pg.git",
   "logo": "http://i.imgur.com/4jyQQAZ.png",
   "success_url": "http://getkong.org/docs/latest/getting-started/quickstart/",
   "buildpacks": [{
     "url": "https://github.com/heroku/heroku-buildpack-multi.git"
   }],
   "addons": [
+    "heroku-postgresql:hobby-dev"
   ]
 }

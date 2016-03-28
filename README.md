@@ -1,10 +1,10 @@
-Kong Heroku app
-===============
-[Kong 0.7.0](http://blog.mashape.com/kong-0-7-0-released/) as a [12-factor](http://12factor.net) app.
+Kong Heroku Postgres app
+========================
+Kong 0.8.0rc1 as a [12-factor](http://12factor.net) app.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/heroku/heroku-kong)
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/chrisanderton/heroku-kong-pg)
 
-Uses the [Kong buildpack](https://github.com/heroku/heroku-buildpack-kong).
+Uses the [Kong Postgres buildpack](https://github.com/chrisanderton/heroku-buildpack-kong-pg).
 
 This is pre-release software
 ----------------------------
@@ -13,8 +13,8 @@ Both Kong itself and this app are actively in development. [MIT license](LICENSE
 Requirements
 ------------
 * [Heroku CLI](https://devcenter.heroku.com/articles/heroku-command)
-* Cassandra datastore
-  * [Instaclustr](https://elements.heroku.com/addons/instaclustr). See: [Cassandra notes](#cassandra)
+* Postgres datastore
+  * [Heroku Postgres](https://elements.heroku.com/addons/heroku-postgresql). See: [Postgres notes](#postgres)
 * Private network for [clustering](https://getkong.org/docs/0.7.x/clustering/)
   * [Heroku Common Runtime](https://devcenter.heroku.com/articles/dyno-runtime#common-runtime)
     * Only a single-dyno is fully supported, `heroku ps:scale web=1`
@@ -26,25 +26,27 @@ Requirements
 
 Usage
 -----
-Get started by cloning heroku-kong and deploying it to a new Heroku app.
+Get started by cloning heroku-kong-pg and deploying it to a new Heroku app.
 
 The `serf` command must be installed locally to generate the cluster's shared secret. [Download Serf](https://www.serfdom.io/downloads.html)
 
 ```bash
-git clone https://github.com/heroku/heroku-kong.git
-cd heroku-kong
+git clone https://github.com/chrisanderton/heroku-kong-pg.git
+cd heroku-kong-pg
 
 # Create app in Common Runtime:
 heroku create my-proxy-app --buildpack https://github.com/heroku/heroku-buildpack-multi.git
+
 # …or in a Private Space:
 heroku create my-proxy-app --buildpack https://github.com/heroku/heroku-buildpack-multi.git --space my-private-space
 
 heroku config:set KONG_CLUSTER_SECRET=`serf keygen`
 
-# If you want to try Instaclustr Cassandra, a paid add-on
-heroku addons:create instaclustr:production-light
+# Add Heroku Postgres (this will give a warning if you're using a Private Space)
+heroku addons:create heroku-postgresql:hobby-dev
 
 git push heroku master
+
 # …the first build will take approximately ten minutes; subsequent builds approx two-minutes.
 ```
 
@@ -59,6 +61,7 @@ $ heroku run bash
 
 # Run Kong in the background, so you can issue commands:
 ~ $ kong start -c $KONG_CONF
+
 # …Kong will start & continue running in the background of this interactive console.
 
 # Example commands:
@@ -69,7 +72,7 @@ $ heroku run bash
 
 ### Configuration
 
-The Heroku app must have several [config vars, as defined in the buildpack](https://github.com/heroku/heroku-buildpack-kong#usage).
+The Heroku app must have several [config vars, as defined in the buildpack](https://github.com/chrisanderton/heroku-buildpack-kong-pg#usage).
 
 Kong is automatically configured at runtime with the `.profile.d/kong-12f.sh` script, which:
 
@@ -80,20 +83,11 @@ Revise [`config/kong.yml.etlua`](config/kong.yml.etlua) to suite your applicatio
 
 See: [Kong 0.7 Configuration Reference](https://getkong.org/docs/0.7.x/configuration/)
 
-### Cassandra
+### Postgres
 
-You may connect to any Cassandra datastore accessible to your Heroku app using the `CASSANDRA_URL` config var as [documented in the buildpack](https://github.com/heroku/heroku-buildpack-kong#usage).
+You may connect to any Postgres datastore accessible to your Heroku app using the `DATABASE_URL` config var as [documented in the buildpack](https://github.com/chrisanderton/heroku-buildpack-kong-pg#usage).
 
-Once Cassandra is attached to the app, Kong will automatically create the keyspace and run migrations.
-
-If you find that initial keyspace setup is required. Use [`cqlsh`](http://docs.datastax.com/en/cql/3.1/cql/cql_reference/cqlsh.html) to run [CQL](https://cassandra.apache.org/doc/cql3/CQL-2.1.html) queries:
-
-  ```shell
-$ CQLSH_HOST={SINGLE_IC_CONTACT_POINT} cqlsh --cqlversion 3.2.1 -u {IC_USER} -p {IC_PASSWORD}
-> CREATE KEYSPACE IF NOT EXISTS kong WITH replication = {'class':'NetworkTopologyStrategy', 'US_EAST_1':3};
-> GRANT ALL ON KEYSPACE kong TO iccassandra;
-> exit
-  ```
+Once Postgres is attached to the app, Kong will automatically create the keyspace and run migrations.
 
 Then, initialize DB schema [using a console](#commands):
 ```bash
@@ -102,7 +96,7 @@ Then, initialize DB schema [using a console](#commands):
 
 ### Kong plugins & additional Lua modules
 
-See [buildpack usage](https://github.com/heroku/heroku-buildpack-kong#usage)
+See [buildpack usage](https://github.com/chrisanderton/heroku-buildpack-kong-pg#usage)
 
 ### Protecting the Admin API
 Kong's Admin API has no built-in authentication. Its exposure must be limited to a restricted, private network.
@@ -125,6 +119,7 @@ Using Kong itself, you may expose the Admin API with authentication & rate limit
 
 From the console:
 ```bash
+
 # Create the authenticated `/kong-admin` API, targeting the localhost port:
 curl -i -X POST --url http://localhost:8001/apis/ --data 'name=kong-admin' --data 'upstream_url=http://localhost:8001/' --data 'request_path=/kong-admin' --data 'strip_request_path=true'
 curl -i -X POST --url http://localhost:8001/apis/kong-admin/plugins/ --data 'name=request-size-limiting' --data "config.allowed_payload_size=8"
@@ -269,14 +264,12 @@ To work with Kong locally on Mac OS X.
 ##### Setup
 
 1. [Install Kong using the .pkg](https://getkong.org/install/osx/)
-1. [Install Cassandra](https://gist.github.com/mars/a303a2616f27b46d72da)
+1. Install Postgres
 1. Execute `./bin/setup`
 
 ##### Running
 
-* Cassandra needs to be running
-  * start `launchctl load ~/Library/LaunchAgents/homebrew.mxcl.cassandra.plist`
-  * stop `launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.cassandra.plist`
+* Postgres needs to be running
 * Execute `./bin/start`
 * Logs in `/usr/local/var/kong/logs/` 
 
@@ -289,4 +282,3 @@ Any test-specific Lua rocks should be specified in `.luarocks_test` file, so tha
   * See also [Kong integration testing](https://getkong.org/docs/0.5.x/plugin-development/tests/)
 1. Execute `source .profile.local`
 1. Execute `busted` to run the tests
-
