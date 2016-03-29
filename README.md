@@ -4,7 +4,7 @@ Kong 0.8.0rc1 as a [12-factor](http://12factor.net) app.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/chrisanderton/heroku-kong-pg)
 
-Uses the [Kong Postgres buildpack](https://github.com/chrisanderton/heroku-buildpack-kong-pg).
+Uses the [Kong Postgres buildpack](https://github.com/chrisanderton/heroku-buildpack-kong-pg) and the [Runit buildpack](https://github.com/codeship/heroku-buildpack-runit.git)
 
 This is pre-release software
 ----------------------------
