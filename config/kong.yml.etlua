@@ -1,5 +1,3 @@
-# Kong app config template
-
 ## Custom plugins on this server
 custom_plugins:
   - ssl
