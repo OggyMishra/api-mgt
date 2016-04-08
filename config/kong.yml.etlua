@@ -39,7 +39,6 @@ cluster:
   encrypt: "<%= cluster_secret %>"
   ttl_on_failure: 3600
 
-## Specify the DAO to use
 database: postgres
 
 postgres:
