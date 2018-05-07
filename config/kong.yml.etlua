@@ -45,7 +45,7 @@ postgres:
   user: "<%= postgres_user %>"
   password: "<%= postgres_password %>"
   database: "<%= postgres_database %>"
-  ssl: true
+  ssl: false
 
 ## SSL Settings
 ## (Uncomment the two properties below to set your own certificate)

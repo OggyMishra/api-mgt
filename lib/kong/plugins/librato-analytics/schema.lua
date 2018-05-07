@@ -9,7 +9,7 @@ return {
     delay = {type = "number", default = 2},
     host = {required = true, type = "string", default = "metrics-api.librato.com"},
     path = {required = true, type = "string", default = "/v1/metrics"},
-    use_ssl = {required = true, type = "boolean", default = true},
-    verify_ssl = {required = true, type = "boolean", default = true}
+    use_ssl = {required = false, type = "boolean", default = false},
+    verify_ssl = {required = false, type = "boolean", default = false}
   }
 }
